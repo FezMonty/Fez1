@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#1a3d2e">
+    <title>Note Fairy</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIk5vdGUgRmFpcnkiLAogICJzaG9ydF9uYW1lIjogIk5vdGVGYWlyeSIsCiAgImRlc2NyaXB0aW9uIjogIlZvaWNlIG5vdGVzIHRvIFpldHRlbGthc3RlbiBwcm9jZXNzb3IiLAogICJzdGFydF91cmwiOiAiLiIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiIzBkMWYxNyIsCiAgInRoZW1lX2NvbG9yIjogIiMxYTNkMmUiLAogICJvcmllbnRhdGlvbiI6ICJwb3J0cmFpdCIsCiAgImljb25zIjogWwogICAgewogICAgICAic3JjIjogImRhdGE6aW1hZ2Uvc3ZnK3htbDtiYXNlNjQsUEhOMlp5QjNhV1IwYUQwaU1USTRJaUJvWldsbmFIUTlJakV5T0NJZ2RtbGxkMEp2ZUQwaU1DQXdJREV5T0NBeE1qZ2lJSGh0Ykc1elBTSm9kSFJ3T2k4dmQzZDNMbmN6TG05eVp5OHlNREF3TDNOMlp5SStQR05wY21Oc1pTQmplRDBpTmpRaUlHTjVQU0kyTkNJZ2NqMGlOakFpSUdacGJHdzlJaU14WVROa01tVWlJQzgrUEdOcGNtTnNaU0JqZUQwaU5qUWlJR041UFNJMk5DSWdjajBpTVRVaUlHWnBiR3c5SW1Ob1pXUjJaV2NnY21kbUtESTFOU3d5TlRVc01qVTFMREF1T1NraUlDOCtQQzl6ZG1jKyIsCiAgICAgICJzaXplcyI6ICIxMjh4MTI4IiwKICAgICAgInR5cGUiOiAiaW1hZ2Uvc3ZnK3htbCIKICAgIH0KICBdCn0=">
+    
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --primary-dark: #1a3d2e;
+            --primary-medium: #2d5940;
+            --primary-light: #3f7556;
+            --accent: #5fa777;
+            --bg-dark: #0d1f17;
+            --bg-card: #162922;
+            --text-primary: #e8f5e9;
+            --text-secondary: #a8d5ba;
+            --danger: #d32f2f;
+            --warning: #f57c00;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .app-container {
+            max-width: 100vw;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background-color: var(--primary-dark);
+            padding: 1rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .install-prompt {
+            background-color: var(--accent);
+            color: var(--bg-dark);
+            padding: 0.75rem;
+            text-align: center;
+            font-weight: 500;
+            cursor: pointer;
+            display: none;
+        }
+
+        .install-prompt.show {
+            display: block;
+        }
+
+        .permission-info {
+            background-color: var(--warning);
+            color: var(--bg-dark);
+            padding: 0.75rem;
+            text-align: center;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .permission-info.show {
+            display: block;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 1rem;
+            padding-bottom: 100px;
+        }
+
+        .record-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .record-button {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background-color: var(--primary-medium);
+            border: 4px solid var(--primary-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            margin-bottom: 1rem;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .record-button:active {
+            transform: scale(0.95);
+        }
+
+        .record-button.recording {
+            background-color: var(--danger);
+            border-color: #f44336;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.7); }
+            70% { box-shadow: 0 0 0 20px rgba(244, 67, 54, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0); }
+        }
+
+        .record-icon {
+            width: 40px;
+            height: 40px;
+            background-color: white;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .record-button.recording .record-icon {
+            border-radius: 8px;
+            width: 30px;
+            height: 30px;
+        }
+
+        .record-status {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+
+        .transcription-area {
+            background-color: var(--bg-card);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            min-height: 100px;
+            border: 1px solid var(--primary-dark);
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .transcription-area:empty::before {
+            content: "Your transcription will appear here...";
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        .notes-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .note-card {
+            background-color: var(--bg-card);
+            border-radius: 12px;
+            padding: 1rem;
+            border: 1px solid var(--primary-dark);
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .note-card.processing {
+            border-color: var(--accent);
+            box-shadow: 0 0 10px rgba(95, 167, 119, 0.3);
+        }
+
+        .note-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .note-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            flex: 1;
+        }
+
+        .note-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .icon-button {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            font-size: 1.2rem;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .icon-button:active {
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        .note-content {
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            line-height: 1.5;
+            user-select: text;
+            -webkit-user-select: text;
+        }
+
+        .note-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .tag {
+            background-color: var(--primary-medium);
+            color: var(--text-primary);
+            padding: 0.25rem 0.75rem;
+            border-radius: 16px;
+            font-size: 0.85rem;
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: var(--primary-dark);
+            padding: 1rem;
+            display: flex;
+            justify-content: space-around;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.3);
+        }
+
+        .nav-button {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
+            font-weight: 500;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .nav-button:active {
+            background-color: var(--primary-medium);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.7);
+            z-index: 1000;
+            padding: 1rem;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: var(--bg-card);
+            border-radius: 16px;
+            padding: 1.5rem;
+            max-width: 90vw;
+            max-height: 80vh;
+            overflow-y: auto;
+            border: 1px solid var(--primary-dark);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .processed-content {
+            background-color: var(--bg-dark);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            user-select: text;
+            -webkit-user-select: text;
+        }
+
+        .source-suggestions {
+            margin-top: 1rem;
+        }
+
+        .source-item {
+            background-color: var(--bg-dark);
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            border-left: 3px solid var(--accent);
+        }
+
+        .source-title {
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .source-type {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .copy-button {
+            background-color: var(--primary-medium);
+            color: var(--text-primary);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            width: 100%;
+            margin-top: 1rem;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .copy-button:active {
+            background-color: var(--primary-light);
+        }
+
+        @media (min-width: 768px) {
+            .app-container {
+                max-width: 768px;
+                margin: 0 auto;
+            }
+            
+            .main-content {
+                padding: 2rem;
+            }
+            
+            .modal-content {
+                max-width: 600px;
+            }
+        }
+
+        /* iOS specific fixes */
+        @supports (-webkit-touch-callout: none) {
+            .app-container {
+                min-height: -webkit-fill-available;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="install-prompt" id="installPrompt">
+            📱 Tap here to install as an app
+        </div>
+        
+        <header class="header">
+            <h1>Note Fairy</h1>
+        </header>
+        
+        <div class="permission-info" id="permissionInfo">
+            🎤 Microphone permission needed. Please allow access when prompted.
+        </div>
+        
+        <main class="main-content">
+            <div class="record-section">
+                <div class="record-status" id="recordStatus">Tap to start recording</div>
+                <button class="record-button" id="recordButton">
+                    <div class="record-icon"></div>
+                </button>
+                <div class="transcription-area" id="transcription"></div>
+            </div>
+            
+            <div class="notes-list" id="notesList"></div>
+        </main>
+        
+        <nav class="bottom-nav">
+            <button class="nav-button" onclick="processAllNotes()">Process All</button>
+            <button class="nav-button" onclick="clearAllNotes()">Clear</button>
+            <button class="nav-button" onclick="exportAllNotes()">Export</button>
+        </nav>
+    </div>
+    
+    <div class="modal" id="processModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Processed Note</h2>
+                <button class="icon-button" onclick="closeModal()">✕</button>
+            </div>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script>
+        let isRecording = false;
+        let recognition;
+        let currentTranscript = '';
+        let notes = [];
+        let noteIdCounter = 0;
+        let deferredPrompt;
+        let finalTranscript = '';
+        let microphonePermission = 'prompt';
+
+        // Service Worker for PWA
+        if ('serviceWorker' in navigator) {
+            // Create inline service worker
+            const swContent = `
+                self.addEventListener('install', (event) => {
+                    self.skipWaiting();
+                });
+
+                self.addEventListener('activate', (event) => {
+                    event.waitUntil(clients.claim());
+                });
+
+                self.addEventListener('fetch', (event) => {
+                    event.respondWith(fetch(event.request));
+                });
+            `;
+            
+            const blob = new Blob([swContent], { type: 'application/javascript' });
+            const swUrl = URL.createObjectURL(blob);
+            
+            navigator.serviceWorker.register(swUrl).then(registration => {
+                console.log('ServiceWorker registered');
+            }).catch(err => {
+                console.log('ServiceWorker registration failed: ', err);
+            });
+        }
+
+        // PWA Install prompt
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('installPrompt').classList.add('show');
+        });
+
+        document.getElementById('installPrompt').addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`User response to the install prompt: ${outcome}`);
+                deferredPrompt = null;
+                document.getElementById('installPrompt').classList.remove('show');
+            }
+        });
+
+        // Check microphone permission
+        async function checkMicrophonePermission() {
+            try {
+                if (navigator.permissions) {
+                    const result = await navigator.permissions.query({ name: 'microphone' });
+                    microphonePermission = result.state;
+                    
+                    result.addEventListener('change', () => {
+                        microphonePermission = result.state;
+                        updatePermissionUI();
+                    });
+                }
+            } catch (err) {
+                console.log('Permissions API not supported');
+            }
+        }
+
+        function updatePermissionUI() {
+            if (microphonePermission === 'denied') {
+                document.getElementById('recordStatus').textContent = 'Microphone access denied';
+                document.getElementById('permissionInfo').textContent = '🚫 Microphone blocked. Please enable in browser settings.';
+                document.getElementById('permissionInfo').classList.add('show');
+            } else {
+                document.getElementById('permissionInfo').classList.remove('show');
+            }
+        }
+
+        // Initialize speech recognition with better error handling
+        function initializeSpeechRecognition() {
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SpeechRecognition();
+                recognition.continuous = true;
+                recognition.interimResults = true;
+                recognition.lang = 'en-US';
+                recognition.maxAlternatives = 1;
+                
+                recognition.onstart = () => {
+                    console.log('Speech recognition started');
+                    finalTranscript = '';
+                };
+                
+                recognition.onresult = (event) => {
+                    let interimTranscript = '';
+                    
+                    for (let i = event.resultIndex; i < event.results.length; i++) {
+                        const transcript = event.results[i][0].transcript;
+                        if (event.results[i].isFinal) {
+                            finalTranscript += transcript + ' ';
+                        } else {
+                            interimTranscript += transcript;
+                        }
+                    }
+                    
+                    currentTranscript = finalTranscript + interimTranscript;
+                    document.getElementById('transcription').textContent = currentTranscript;
+                };
+                
+                recognition.onerror = (event) => {
+                    console.error('Speech recognition error:', event.error);
+                    
+                    if (event.error === 'not-allowed') {
+                        document.getElementById('permissionInfo').textContent = '🎤 Please allow microphone access and try again.';
+                        document.getElementById('permissionInfo').classList.add('show');
+                        document.getElementById('recordStatus').textContent = 'Microphone access needed';
+                    } else if (event.error === 'no-speech') {
+                        document.getElementById('recordStatus').textContent = 'No speech detected. Try again.';
+                    } else {
+                        document.getElementById('recordStatus').textContent = `Error: ${event.error}`;
+                    }
+                    
+                    stopRecording();
+                };
+                
+                recognition.onend = () => {
+                    console.log('Speech recognition ended');
+                    if (isRecording) {
+                        // Restart if still recording (happens on mobile after silence)
+                        try {
+                            recognition.start();
+                        } catch (e) {
+                            console.log('Failed to restart recognition');
+                        }
+                    }
+                };
+            } else {
+                alert('Speech recognition is not supported in your browser. Try Chrome or Safari.');
+            }
+        }
+
+        // Record button functionality
+        document.getElementById('recordButton').addEventListener('click', async () => {
+            // First click - request permission if needed
+            if (microphonePermission === 'prompt') {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    stream.getTracks().forEach(track => track.stop());
+                    document.getElementById('permissionInfo').classList.remove('show');
+                } catch (err) {
+                    console.error('Microphone permission denied:', err);
+                    return;
+                }
+            }
+            
+            if (isRecording) {
+                stopRecording();
+            } else {
+                startRecording();
+            }
+        });
+
+        function startRecording() {
+            if (!recognition) {
+                initializeSpeechRecognition();
+            }
+            
+            if (!recognition) {
+                alert('Speech recognition is not available.');
+                return;
+            }
+            
+            isRecording = true;
+            currentTranscript = '';
+            finalTranscript = '';
+            document.getElementById('recordButton').classList.add('recording');
+            document.getElementById('recordStatus').textContent = 'Recording... Tap to stop';
+            document.getElementById('transcription').textContent = '';
+            document.getElementById('permissionInfo').classList.remove('show');
+            
+            // Haptic feedback if available
+            if (navigator.vibrate) {
+                navigator.vibrate(50);
+            }
+            
+            try {
+                recognition.start();
+            } catch (err) {
+                if (err.message.includes('already started')) {
+                    recognition.stop();
+                    setTimeout(() => {
+                    button.textContent = originalText;
+                    button.style.backgroundColor = '';
+                }, 2000);
+                
+                // Haptic feedback
+                if (navigator.vibrate) {
+                    navigator.vibrate(50);
+                }
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                alert('Failed to copy to clipboard');
+            });
+        }
+
+        function deleteNote(noteId) {
+            notes = notes.filter(n => n.id !== noteId);
+            renderNotes();
+            localStorage.setItem('voiceNotes', JSON.stringify(notes));
+            
+            if (navigator.vibrate) {
+                navigator.vibrate(50);
+            }
+        }
+
+        function processAllNotes() {
+            if (notes.length === 0) {
+                alert('No notes to process');
+                return;
+            }
+            
+            // Process all notes into a single document
+            const allProcessed = notes.map(note => {
+                const cleaned = cleanTranscript(note.transcript);
+                const concepts = extractConcepts(cleaned);
+                return {
+                    timestamp: note.timestamp,
+                    content: cleaned,
+                    concepts: concepts
+                };
+            });
+            
+            const markdown = `# Voice Notes Batch Export
+
+Date: ${new Date().toISOString().split('T')[0]}
+Total Notes: ${notes.length}
+
+${allProcessed.map((p, i) => `
+## Note ${i + 1}
+
+*Recorded: ${new Date(p.timestamp).toLocaleString()}*
+
+${p.content}
+
+Tags: #${p.concepts.join(' #')}
+
+---
+`).join('\n')}`;
+
+            showProcessedNote(markdown, []);
+        }
+
+        function clearAllNotes() {
+            if (confirm('Clear all notes? This cannot be undone.')) {
+                notes = [];
+                renderNotes();
+                localStorage.removeItem('voiceNotes');
+            }
+        }
+
+        function exportAllNotes() {
+            if (notes.length === 0) {
+                alert('No notes to export');
+                return;
+            }
+            
+            const exportData = {
+                version: '1.0',
+                exportDate: new Date().toISOString(),
+                notes: notes
+            };
+            
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `voice-notes-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Load saved notes on startup
+        window.addEventListener('load', () => {
+            const saved = localStorage.getItem('voiceNotes');
+            if (saved) {
+                notes = JSON.parse(saved);
+                noteIdCounter = Math.max(...notes.map(n => n.id), 0) + 1;
+                renderNotes();
+            }
+            
+            // Initialize speech recognition
+            initializeSpeechRecognition();
+            
+            // Check microphone permission
+            checkMicrophonePermission();
+        });
+
+        // Handle modal close on background click
+        document.getElementById('processModal').addEventListener('click', (e) => {
+            if (e.target.id === 'processModal') {
+                closeModal();
+            }
+        });
+
+        // Prevent iOS bounce
+        document.addEventListener('touchmove', function(e) {
+            if (e.target.closest('.modal-content') || e.target.closest('.processed-content')) {
+                return;
+            }
+            e.preventDefault();
+        }, { passive: false });
+    </script>
+</body>
+</html>(() => {
+                        recognition.start();
+                    }, 100);
+                } else {
+                    console.error('Failed to start recognition:', err);
+                    stopRecording();
+                }
+            }
+        }
+
+        function stopRecording() {
+            isRecording = false;
+            document.getElementById('recordButton').classList.remove('recording');
+            document.getElementById('recordStatus').textContent = 'Tap to start recording';
+            
+            if (recognition) {
+                try {
+                    recognition.stop();
+                } catch (err) {
+                    console.log('Recognition already stopped');
+                }
+            }
+            
+            // Haptic feedback if available
+            if (navigator.vibrate) {
+                navigator.vibrate([50, 50, 50]);
+            }
+            
+            if (currentTranscript.trim()) {
+                saveNote(currentTranscript.trim());
+                document.getElementById('transcription').textContent = '';
+            }
+        }
+
+        function saveNote(transcript) {
+            const note = {
+                id: noteIdCounter++,
+                transcript: transcript,
+                timestamp: new Date(),
+                processed: false
+            };
+            
+            notes.unshift(note);
+            renderNotes();
+            
+            // Auto-save to localStorage
+            localStorage.setItem('voiceNotes', JSON.stringify(notes));
+        }
+
+        function renderNotes() {
+            const notesList = document.getElementById('notesList');
+            notesList.innerHTML = '';
+            
+            notes.forEach(note => {
+                const noteCard = document.createElement('div');
+                noteCard.className = 'note-card';
+                noteCard.innerHTML = `
+                    <div class="note-header">
+                        <div class="note-title">${new Date(note.timestamp).toLocaleString()}</div>
+                        <div class="note-actions">
+                            <button class="icon-button" onclick="processNote(${note.id})">⚡</button>
+                            <button class="icon-button" onclick="deleteNote(${note.id})">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="note-content">${note.transcript}</div>
+                `;
+                notesList.appendChild(noteCard);
+            });
+        }
+
+        function cleanTranscript(text) {
+            // Remove filler words and clean up
+            const fillers = /\b(um|uh|like|you know|basically|actually|literally|sort of|kind of)\b/gi;
+            let cleaned = text.replace(fillers, '');
+            
+            // Remove extra spaces
+            cleaned = cleaned.replace(/\s+/g, ' ').trim();
+            
+            // Capitalize sentences
+            cleaned = cleaned.replace(/(^|\. )(\w)/g, (match, p1, p2) => p1 + p2.toUpperCase());
+            
+            return cleaned;
+        }
+
+        function extractConcepts(text) {
+            // Simple concept extraction - in a real app, this would use NLP
+            const words = text.toLowerCase().split(/\s+/);
+            const stopWords = new Set(['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'from', 'is', 'are', 'was', 'were', 'been', 'be', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'must', 'shall', 'can', 'need', 'it', 'this', 'that', 'these', 'those']);
+            
+            const concepts = {};
+            words.forEach(word => {
+                if (word.length > 3 && !stopWords.has(word)) {
+                    concepts[word] = (concepts[word] || 0) + 1;
+                }
+            });
+            
+            return Object.entries(concepts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5)
+                .map(([word]) => word);
+        }
+
+        function generateSourceSuggestions(concepts) {
+            // Mock source suggestions - in a real app, this would use an API
+            const sources = [
+                { title: "Getting Things Done", author: "David Allen", type: "Book" },
+                { title: "How to Take Smart Notes", author: "Sönke Ahrens", type: "Book" },
+                { title: "Building a Second Brain", author: "Tiago Forte", type: "Book" },
+                { title: "The Zettelkasten Method", author: "Various", type: "Article" },
+                { title: "Atomic Habits", author: "James Clear", type: "Book" }
+            ];
+            
+            return sources.slice(0, 3);
+        }
+
+        function processNote(noteId) {
+            const note = notes.find(n => n.id === noteId);
+            if (!note) return;
+            
+            const cleaned = cleanTranscript(note.transcript);
+            const concepts = extractConcepts(cleaned);
+            const sources = generateSourceSuggestions(concepts);
+            
+            // Generate Zettelkasten format
+            const zettelTitle = concepts.slice(0, 3).map(c => c.charAt(0).toUpperCase() + c.slice(1)).join(' ');
+            const timestamp = new Date().toISOString().split('T')[0];
+            const zettelId = `${timestamp}-${Math.random().toString(36).substr(2, 4)}`;
+            
+            const markdown = `# ${zettelTitle}
+
+ID: ${zettelId}
+Created: ${timestamp}
+Tags: #${concepts.join(' #')}
+
+## Content
+
+${cleaned}
+
+## Key Concepts
+
+${concepts.map(c => `- [[${c}]]`).join('\n')}
+
+## Related Notes
+
+- [[Previous Note]]
+- [[Related Concept]]
+
+## Sources to Explore
+
+${sources.map(s => `- ${s.title} by ${s.author} (${s.type})`).join('\n')}
+
+---
+
+*Transcribed from voice note on ${new Date(note.timestamp).toLocaleString()}*`;
+
+            showProcessedNote(markdown, sources);
+        }
+
+        function showProcessedNote(markdown, sources) {
+            const modalBody = document.getElementById('modalBody');
+            modalBody.innerHTML = `
+                <div class="processed-content">${markdown}</div>
+                <div class="source-suggestions">
+                    <h3>Recommended Sources</h3>
+                    ${sources.map(s => `
+                        <div class="source-item">
+                            <div class="source-title">${s.title}</div>
+                            <div class="source-type">${s.author} • ${s.type}</div>
+                        </div>
+                    `).join('')}
+                </div>
+                <button class="copy-button" onclick="copyToClipboard(\`${markdown.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`)">
+                    Copy Markdown
+                </button>
+            `;
+            
+            document.getElementById('processModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('processModal').classList.remove('active');
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                // Visual feedback
+                const button = event.target;
+                const originalText = button.textContent;
+                button.textContent = 'Copied!';
+                button.style.backgroundColor = 'var(--accent)';
+                
+                setTimeout
